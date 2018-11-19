@@ -66,12 +66,13 @@ class QuantitativeValue(Moonshot):
         # enterprise multiple (EV/EBITDA) (N=10)
         fundamentals = get_sharadar_fundamentals_reindexed_like(
             closes, 
-            fields=["EVEBIT"], 
+            fields=["EVEBIT", "EBIT"], 
             dimension="ARQ", 
             domain=self.MASTER_DOMAIN)
         enterprise_multiples = fundamentals.loc["EVEBIT"]
-        # Ignore negative enterprise multiples, which indicate negative earnings
-        enterprise_multiples = enterprise_multiples.where(enterprise_multiples > 0)
+        ebits = fundamentals.loc["EBIT"]
+        # Ignore negative earnings
+        enterprise_multiples = enterprise_multiples.where(ebits > 0)
         # Only apply rankings to stocks with adequate dollar volume
         value_ranks = enterprise_multiples.where(have_adequate_dollar_volumes).rank(axis=1, ascending=True, pct=True)
         are_value_stocks = value_ranks <= (self.VALUE_TOP_N_PCT/100)
