@@ -67,7 +67,7 @@ class QuantitativeValue(Moonshot):
         fundamentals = get_sharadar_fundamentals_reindexed_like(
             closes, 
             fields=["EVEBIT", "EBIT"], 
-            dimension="ARQ", 
+            dimension="ART", 
             domain=self.MASTER_DOMAIN)
         enterprise_multiples = fundamentals.loc["EVEBIT"]
         ebits = fundamentals.loc["EBIT"]
@@ -96,7 +96,7 @@ class QuantitativeValue(Moonshot):
         fundamentals = get_sharadar_fundamentals_reindexed_like(
             closes, 
             domain=self.MASTER_DOMAIN,
-           dimension="ARQ", # As-reported quarterly reports
+           dimension="ART", # As-reported trailing twelve month reports
            fields=[
                "ROA", # Return on assets
                "ASSETS", # Total Assets
