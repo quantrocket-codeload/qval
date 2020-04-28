@@ -1,4 +1,4 @@
-# Copyright 2018 QuantRocket LLC - All Rights Reserved
+# Copyright 2020 QuantRocket LLC - All Rights Reserved
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ from moonshot.commission import PerShareCommission
 from quantrocket.fundamental import get_sharadar_fundamentals_reindexed_like
 
 class USStockCommission(PerShareCommission):
-    IB_COMMISSION_PER_SHARE = 0.005
+    BROKER_COMMISSION_PER_SHARE = 0.005
 
 class QuantitativeValue(Moonshot):
     """
@@ -41,7 +41,7 @@ class QuantitativeValue(Moonshot):
     """
 
     CODE = "qval"
-    DB = "sharadar-1d"
+    DB = "sharadar-us-stk-1d"
     DB_FIELDS = ["Close", "Volume"]
     DOLLAR_VOLUME_TOP_N_PCT = 60
     DOLLAR_VOLUME_WINDOW = 90
@@ -50,7 +50,6 @@ class QuantitativeValue(Moonshot):
     VALUE_TOP_N_PCT = 10
     QUALITY_TOP_N_PCT = 50
     REBALANCE_INTERVAL = "Q"
-    MASTER_DOMAIN = "sharadar" # use "sharadar" with Sharadar prices, use "main" with IB prices
     COMMISSION_CLASS = USStockCommission
 
     def prices_to_signals(self, prices):
@@ -67,8 +66,7 @@ class QuantitativeValue(Moonshot):
         fundamentals = get_sharadar_fundamentals_reindexed_like(
             closes,
             fields=["EVEBIT", "EBIT"],
-            dimension="ART",
-            domain=self.MASTER_DOMAIN)
+            dimension="ART")
         enterprise_multiples = fundamentals.loc["EVEBIT"]
         ebits = fundamentals.loc["EBIT"]
         # Ignore negative earnings
@@ -91,7 +89,6 @@ class QuantitativeValue(Moonshot):
         # Step 1: query relevant indicators
         fundamentals = get_sharadar_fundamentals_reindexed_like(
             closes,
-            domain=self.MASTER_DOMAIN,
            dimension="ART", # As-reported trailing twelve month reports
            fields=[
                "ROA", # Return on assets
@@ -119,7 +116,6 @@ class QuantitativeValue(Moonshot):
         # period
         fundamentals = get_sharadar_fundamentals_reindexed_like(
             closes,
-            domain=self.MASTER_DOMAIN,
             dimension="ART", # As-reported trailing twelve month reports
             fields=["REPORTPERIOD"])
         fiscal_periods = fundamentals.loc["REPORTPERIOD"]
@@ -172,7 +168,7 @@ class QuantitativeValue(Moonshot):
 
         # Step 5: Rebalance quarterly
         # Resample daily to quarterly, taking the last day's signal
-        # For pandas offset aliases, see https://pandas.pydata.org/pandas-docs/stable/timeseries.html#offset-aliases
+        # For pandas offset aliases, see https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#offset-aliases
         weights = weights.resample(self.REBALANCE_INTERVAL).last()
         # Reindex back to daily and fill forward
         weights = weights.reindex(prices.loc["Close"].index, method="ffill")
